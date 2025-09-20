@@ -1,6 +1,5 @@
 # Ben Probst - 20284512 - CMPE 327 Assignment 1
 
-```
 | Function | Status | Missing |
 |----------|---------|----------|
 | Add Book To Catalog | complete | |
@@ -10,7 +9,7 @@
 | Late Fee Calculation API | incomplete | Calculates late fees for overdue books |
 | Book Search Functionality | incomplete | Has UI but not implemented |
 | Patron Status Report | incomplete | All |
-```
+
 
 ## Test Coverage
 
