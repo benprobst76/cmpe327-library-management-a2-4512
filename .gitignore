@@ -5,6 +5,10 @@ venv/
 __pycache__/
 *.py[cod]
 *$py.class
+.pytest_cache/
 
 #SQlite database
 *.db
+
+# vscode settings
+.vscode/
