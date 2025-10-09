@@ -22,8 +22,9 @@ def test_borrow_book_valid_patron_and_book():
     # Add a book first
     add_book_to_catalog("Test Book", "Test Author", "1234567890123", 5)
     # get book id
-    book_id = get_book_by_isbn("1234567890123")['id']
-    success, message = borrow_book_by_patron("123456", book_id)
+    book_id = get_book_by_isbn("1234567890123")
+    assert book_id is not None, "Book with ISBN 1234567890123 not found in catalog"
+    success, message = borrow_book_by_patron("123456", book_id['id'])
     
     assert success == True
     assert "successfully borrowed" in message.lower()
@@ -50,10 +51,11 @@ def test_borrow_book_unavailable_book():
     # Add a book with 1 available copy
     add_book_to_catalog("Test Book", "Test Author", "1234567890123", 1)
     # Borrow it first to make it unavailable
-    book_id = get_book_by_isbn("1234567890123")['id']
-    borrow_book_by_patron("123456", book_id)
+    book_id = get_book_by_isbn("1234567890123")
+    assert book_id is not None, "Book with ISBN 1234567890123 not found in catalog"
+    borrow_book_by_patron("123456", book_id['id'])
     # Try to borrow again
-    success, message = borrow_book_by_patron("654321", book_id)
+    success, message = borrow_book_by_patron("654321", book_id['id'])
 
     assert success == False
     assert "not available" in message.lower()
@@ -69,13 +71,15 @@ def test_borrow_book_patron_at_limit():
     
     # Borrow 5 books successfully
     for i in range(5):
-        book_id = get_book_by_isbn(f"123456789012{i}")['id']
-        success, message = borrow_book_by_patron(patron_id, book_id)
+        book_id = get_book_by_isbn(f"123456789012{i}")
+        assert book_id is not None, f"Book with ISBN 123456789012{i} not found in catalog"
+        success, message = borrow_book_by_patron(patron_id, book_id['id'])
         assert success == True
     
     # Try to borrow the 6th book
-    book_id = get_book_by_isbn("1234567890125")['id']
-    success, message = borrow_book_by_patron(patron_id, book_id)
+    book_id = get_book_by_isbn("1234567890125")
+    assert book_id is not None, "Book with ISBN 1234567890125 not found in catalog"
+    success, message = borrow_book_by_patron(patron_id, book_id['id'])
 
     assert success == False
     assert "maximum borrowing limit" in message.lower()

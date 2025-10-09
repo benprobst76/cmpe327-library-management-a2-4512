@@ -74,10 +74,11 @@ def test_catalog_display_books_sorted_by_title():
 def test_catalog_display_book_with_zero_available_copies():
     """Test displaying a book with zero available copies."""
     add_book_to_catalog("Popular Book", "Famous Author", "1234567890123", 1)
-    book_id = get_book_by_isbn("1234567890123")['id']
+    book_id = get_book_by_isbn("1234567890123")
+    assert book_id is not None, "Book with ISBN 1234567890123 not found in catalog"
     # Simulate borrowing by updating available copies
     conn = get_db_connection()
-    conn.execute('UPDATE books SET available_copies = 0 WHERE id = ?', (book_id,))
+    conn.execute('UPDATE books SET available_copies = 0 WHERE id = ?', (book_id['id'],))
     conn.commit()
     conn.close()
     

@@ -38,7 +38,7 @@ def add_book_to_catalog(title: str, author: str, isbn: str, total_copies: int) -
     if len(author.strip()) > 100:
         return False, "Author must be less than 100 characters."
     
-    if len(isbn) != 13:
+    if len(isbn) != 13 or not isbn.isdigit():
         return False, "ISBN must be exactly 13 digits."
     
     if not isinstance(total_copies, int) or total_copies <= 0:
@@ -85,6 +85,11 @@ def borrow_book_by_patron(patron_id: str, book_id: int) -> Tuple[bool, str]:
     
     if current_borrowed >= 5:
         return False, "You have reached the maximum borrowing limit of 5 books."
+    
+    # Check if patron already has this book borrowed
+    borrowed_books = get_patron_borrowed_books(patron_id)
+    if any(record['book_id'] == book_id for record in borrowed_books):
+        return False, "You have already borrowed this book."
     
     # Create borrow record
     borrow_date = datetime.now()
@@ -165,7 +170,7 @@ def calculate_late_fee_for_book(patron_id: str, book_id: int) -> Dict:
     
     if borrow_record['is_overdue']:
         # Calculate late fee with tiered rates
-        days_overdue = (datetime.now() - datetime.strptime(borrow_record['due_date'], '%Y-%m-%d')).days
+        days_overdue = (datetime.now() - borrow_record['due_date']).days
         days_overdue = max(0, days_overdue)
         if days_overdue <= 7:
             fee_amount = days_overdue * 0.50
@@ -192,7 +197,6 @@ def search_books_in_catalog(search_term: str, search_type: str) -> List[Dict]:
     - Exact matching for ISBN
     - Returns results in same format as get_all_books()
     """
-
     # Basic validation
     if not search_term or not isinstance(search_term, str):
         return []
@@ -201,6 +205,9 @@ def search_books_in_catalog(search_term: str, search_type: str) -> List[Dict]:
 
     search_term = search_term.strip()
     search_type = search_type.strip().lower()
+
+    if not search_term:
+        return []
 
     if search_type not in ("title", "author", "isbn"):
         return []
