@@ -1,7 +1,7 @@
 import pytest
 from datetime import datetime, timedelta
 from library_service import (
-    get_patron_status_report, borrow_book_by_patron, return_book_by_patron, add_book_to_catalog
+    get_patron_status_report, borrow_book_by_patron, return_book_by_patron, add_book_to_catalog, get_book_by_isbn
 )
 from database import init_database, get_db_connection
 
@@ -55,11 +55,14 @@ def test_patron_status_patron_with_no_borrowing_history():
 def test_patron_status_patron_with_currently_borrowed_books():
     """Test patron status for patron with currently borrowed books."""
     setup_sample_books()
-    
     # Borrow some books
-    borrow_book_by_patron("123456", 1)
-    borrow_book_by_patron("123456", 2)
-    
+    book1 = get_book_by_isbn("9780743273565")
+    assert book1 is not None, "Book with ISBN 9780743273565 not found in catalog"
+    borrow_book_by_patron("123456", book1['id'])
+    book2 = get_book_by_isbn("9780061120084")
+    assert book2 is not None, "Book with ISBN 9780061120084 not found in catalog"
+    borrow_book_by_patron("123456", book2['id'])
+
     result = get_patron_status_report("123456")
 
     expected_fields = ['currently_borrowed', 'total_late_fees', 'books_borrowed_count', 'borrowing_history']
@@ -78,11 +81,12 @@ def test_patron_status_patron_with_currently_borrowed_books():
 def test_patron_status_patron_with_returned_books():
     """Test patron status for patron who has returned books."""
     setup_sample_books()
-    
+    book_id = get_book_by_isbn("9780743273565")
+    assert book_id is not None, "Book with ISBN 9780743273565 not found in catalog"
     # Borrow and return a book
-    borrow_book_by_patron("123456", 1)
-    return_book_by_patron("123456", 1)
-    
+    borrow_book_by_patron("123456", book_id['id'])
+    return_book_by_patron("123456", book_id['id'])
+
     result = get_patron_status_report("123456")
     
     expected_fields = ['currently_borrowed', 'total_late_fees', 'books_borrowed_count', 'borrowing_history']
@@ -91,16 +95,20 @@ def test_patron_status_patron_with_returned_books():
 
     assert isinstance(result, dict)
     assert result['books_borrowed_count'] == 0  
-    assert isinstance(result['borrowing_history'], list) and len(result['borrowing_history']) == 0
-    assert len(result['borrowing_history']) >= 1 
+    assert isinstance(result['borrowing_history'], list)
+    assert len(result['borrowing_history']) == 1
 
 def test_patron_status_patron_with_late_fees():
     """Test patron status for patron with late fees."""
     setup_sample_books()
-    
-    borrow_book_by_patron("123456", 1)
-    borrow_book_by_patron("123456", 2)
-    
+
+    book_id_1 = get_book_by_isbn("9780743273565")
+    assert book_id_1 is not None, "Book with ISBN 9780743273565 not found in catalog"
+    book_id_2 = get_book_by_isbn("9780061120084")
+    assert book_id_2 is not None, "Book with ISBN 9780061120084 not found in catalog"
+    borrow_book_by_patron("123456", book_id_1['id'])
+    borrow_book_by_patron("123456", book_id_2['id'])
+
     result = get_patron_status_report("123456")
 
     expected_fields = ['currently_borrowed', 'total_late_fees', 'books_borrowed_count', 'borrowing_history']

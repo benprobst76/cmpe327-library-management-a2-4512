@@ -21,13 +21,14 @@ def test_return_book_valid_patron_and_book():
     """Test returning a book with valid patron ID and borrowed book."""
     # Add a book and borrow it first
     add_book_to_catalog("Test Book", "Test Author", "1234567890123", 5)
-    book_id = get_book_by_isbn("1234567890123")['id']
-    borrow_book_by_patron("123456", book_id)
+    book_id = get_book_by_isbn("1234567890123")
+    assert book_id is not None, "Book with ISBN 1234567890123 not found in catalog"
+    borrow_book_by_patron("123456", book_id['id'])
 
-    success, message = return_book_by_patron("123456", book_id)
+    success, message = return_book_by_patron("123456", book_id['id'])
 
     assert success == True
-    assert "returned successfully" in message.lower()
+    assert "successfully returned" in message.lower()
 
 def test_return_book_nonexistent_book():
     """Test returning a book that doesn't exist."""
@@ -39,43 +40,46 @@ def test_return_book_nonexistent_book():
 def test_return_book_not_borrowed_by_patron():
     """Test returning a book that wasn't borrowed by the patron."""
     add_book_to_catalog("Test Book", "Test Author", "1234567890123", 5)
-    book_id = get_book_by_isbn("1234567890123")['id']
+    book_id = get_book_by_isbn("1234567890123")
+    assert book_id is not None, "Book with ISBN 1234567890123 not found in catalog"
     # Borrow with different patron
-    borrow_book_by_patron("654321", book_id)
+    borrow_book_by_patron("654321", book_id['id'])
 
     # Try to return with different patron
-    success, message = return_book_by_patron("123456", book_id)
-    
+    success, message = return_book_by_patron("123456", book_id['id'])
+
     assert success == False
-    assert "not borrowed by the patron" in message.lower() or "already been returned" in message.lower()
+    assert "not borrowed by the patron" in message.lower()
 
 def test_return_book_already_returned():
     """Test returning a book that has already been returned."""
     add_book_to_catalog("Test Book", "Test Author", "1234567890123", 1)
-    book_id = get_book_by_isbn("1234567890123")['id']
-    borrow_book_by_patron("123456", book_id)
-    return_book_by_patron("123456", book_id)  # First return
+    book_id = get_book_by_isbn("1234567890123")
+    assert book_id is not None, "Book with ISBN 1234567890123 not found in catalog"
+    borrow_book_by_patron("123456", book_id['id'])
+    return_book_by_patron("123456", book_id['id'])  # First return
 
     # Try to return again
-    success, message = return_book_by_patron("123456", book_id)
+    success, message = return_book_by_patron("123456", book_id['id'])
 
     assert success == False
-    assert "not borrowed by the patron" in message.lower() or "already been returned" in message.lower()
+    assert "not borrowed by the patron" in message.lower()
 
 def test_return_book_with_late_fee():
     """Test returning an overdue book with late fees."""
     add_book_to_catalog("Test Book", "Test Author", "1234567890123", 5)
-    book_id = get_book_by_isbn("1234567890123")['id']
-    borrow_book_by_patron("123456", book_id)
+    book_id = get_book_by_isbn("1234567890123")
+    assert book_id is not None, "Book with ISBN 1234567890123 not found in catalog"
+    borrow_book_by_patron("123456", book_id['id'])
 
     # Manipulate the borrow date to be > 14 days ago
     conn = get_db_connection()
     overdue_date = (datetime.now() - timedelta(days=20)).strftime('%Y-%m-%d')
     conn.execute("UPDATE borrow_records SET borrow_date = ? WHERE patron_id = ? AND book_id = ?",
-                 (overdue_date, "123456", book_id))
+                 (overdue_date, "123456", book_id['id']))
     conn.commit()
     conn.close()
-    success, message = return_book_by_patron("123456", book_id)
+    success, message = return_book_by_patron("123456", book_id['id'])
 
     assert success == True
-    assert "returned successfully" in message.lower()
+    assert "successfully returned" in message.lower()

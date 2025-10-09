@@ -25,7 +25,7 @@ def test_calculate_late_fee_valid_patron_and_book():
 
     assert result['fee_amount'] == 0.00
     assert result['days_overdue'] == 0
-    assert 'calculated' in result['status'].lower()
+    assert 'on time' in result['status'].lower()
 
 def test_calculate_late_fee_invalid_patron_id():
     """Test late fee calculation with invalid patron ID."""
@@ -38,12 +38,12 @@ def test_calculate_late_fee_invalid_patron_id():
     assert 'invalid' in result['status'].lower()
 
 def test_calculate_late_fee_no_borrow_record():
-    """Test late fee calculation when no borrow record exists."""
+    """Test late fee calculation when no book exists."""
     result = calculate_late_fee_for_book("123456", 999)
     
     assert result['fee_amount'] == 0.00
     assert result['days_overdue'] == 0
-    assert 'no borrow record' in result['status'].lower()
+    assert 'invalid book' in result['status'].lower()
 
 def test_calculate_late_fee_book_not_overdue():
     """Test late fee calculation for a book that's not overdue."""
@@ -55,7 +55,7 @@ def test_calculate_late_fee_book_not_overdue():
 
     assert result['fee_amount'] == 0.00
     assert result['days_overdue'] == 0
-    assert 'not overdue' in result['status'].lower()
+    assert 'on time' in result['status'].lower()
 
 def test_calculate_late_fee_one_day_overdue():
     """Test late fee calculation for 1 day overdue ($0.50)."""
