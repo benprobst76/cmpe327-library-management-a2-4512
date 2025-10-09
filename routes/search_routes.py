@@ -23,6 +23,6 @@ def search_books():
     books = search_books_in_catalog(search_term, search_type)
     
     if not books:
-        flash('Search functionality is not yet implemented.', 'error')
-    
+        flash('No books found matching your search criteria.', 'error')
+
     return render_template('search.html', books=books, search_term=search_term, search_type=search_type)

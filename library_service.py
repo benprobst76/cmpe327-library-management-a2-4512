@@ -282,9 +282,7 @@ def get_patron_status_report(patron_id: str) -> Dict:
                 fee = (7 * 0.50) + ((days_overdue - 7) * 1.00)
             fee = min(fee, 15.00)
 
-        # Only outstanding (unreturned and overdue) fees are considered currently owed,
-        # but include all fees in history for transparency. R7 asks for "Total late fees owed" -
-        # interpret this as sum of fees that are currently outstanding (unreturned and overdue) plus any unpaid fees from returned items.
+        # Only outstanding overdue fees are considered currently owed,
         # Since the system does not track payments, treat all computed fees as owed.
         total_late_fees += fee
 

@@ -18,10 +18,11 @@ def setup_database():
 def test_calculate_late_fee_valid_patron_and_book():
     """Test late fee calculation for a valid patron and book."""
     add_book_to_catalog("Test Book", "Test Author", "1234567890123", 1)
-    book_id = get_book_by_isbn("1234567890123")['id']
-    borrow_book_by_patron("123456", book_id)
+    book_id = get_book_by_isbn("1234567890123")
+    assert book_id is not None, "Book with ISBN 1234567890123 not found in catalog"
+    borrow_book_by_patron("123456", book_id['id'])
 
-    result = calculate_late_fee_for_book("123456", book_id)
+    result = calculate_late_fee_for_book("123456", book_id['id'])
 
     assert result['fee_amount'] == 0.00
     assert result['days_overdue'] == 0
@@ -30,8 +31,9 @@ def test_calculate_late_fee_valid_patron_and_book():
 def test_calculate_late_fee_invalid_patron_id():
     """Test late fee calculation with invalid patron ID."""
     add_book_to_catalog("Test Book", "Test Author", "1234567890123", 1)
-    book_id = get_book_by_isbn("1234567890123")['id']
-    result = calculate_late_fee_for_book("", book_id)
+    book_id = get_book_by_isbn("1234567890123")
+    assert book_id is not None, "Book with ISBN 1234567890123 not found in catalog"
+    result = calculate_late_fee_for_book("", book_id['id'])
 
     assert result['fee_amount'] == 0.00
     assert result['days_overdue'] == 0
@@ -48,10 +50,11 @@ def test_calculate_late_fee_no_borrow_record():
 def test_calculate_late_fee_book_not_overdue():
     """Test late fee calculation for a book that's not overdue."""
     add_book_to_catalog("Test Book", "Test Author", "1234567890123", 1)
-    book_id = get_book_by_isbn("1234567890123")['id']
-    borrow_book_by_patron("123456", book_id)
+    book_id = get_book_by_isbn("1234567890123")
+    assert book_id is not None, "Book with ISBN 1234567890123 not found in catalog"
+    borrow_book_by_patron("123456", book_id['id'])
 
-    result = calculate_late_fee_for_book("123456", book_id)
+    result = calculate_late_fee_for_book("123456", book_id['id'])
 
     assert result['fee_amount'] == 0.00
     assert result['days_overdue'] == 0
@@ -60,10 +63,11 @@ def test_calculate_late_fee_book_not_overdue():
 def test_calculate_late_fee_one_day_overdue():
     """Test late fee calculation for 1 day overdue ($0.50)."""
     add_book_to_catalog("Test Book", "Test Author", "1234567890123", 1)
-    book_id = get_book_by_isbn("1234567890123")['id']
-    borrow_book_by_patron("123456", book_id)
+    book_id = get_book_by_isbn("1234567890123")
+    assert book_id is not None, "Book with ISBN 1234567890123 not found in catalog"
+    borrow_book_by_patron("123456", book_id['id'])
     # Not overdue yet but checking structure
-    result = calculate_late_fee_for_book("123456", book_id)
+    result = calculate_late_fee_for_book("123456", book_id['id'])
 
     # Should return proper structure regardless of implementation
     assert 'fee_amount' in result
