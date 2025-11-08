@@ -9,10 +9,10 @@ description = "Library Management System"
 requires-python = ">=3.9"
 
 [tool.setuptools]
-py-modules = ["app", "database", "library_service"]
+py-modules = ["app", "database"]
 
 [tool.setuptools.packages.find]
-include = ["routes*", "templates*"]
+include = ["routes*", "services*", "templates*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
