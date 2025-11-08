@@ -1,5 +1,5 @@
 import pytest
-from library_service import (
+from services.library_service import (
     calculate_late_fee_for_book, borrow_book_by_patron, add_book_to_catalog, get_book_by_isbn
 )
 from database import init_database, get_db_connection

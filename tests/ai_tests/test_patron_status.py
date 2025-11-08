@@ -1,6 +1,6 @@
 import pytest
 from datetime import datetime, timedelta
-from library_service import get_patron_status_report, add_book_to_catalog, borrow_book_by_patron, return_book_by_patron
+from services.library_service import get_patron_status_report, add_book_to_catalog, borrow_book_by_patron, return_book_by_patron
 from database import init_database, get_db_connection, get_book_by_isbn
 
 @pytest.fixture(autouse=True)

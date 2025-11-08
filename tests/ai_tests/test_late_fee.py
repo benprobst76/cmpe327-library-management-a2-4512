@@ -1,6 +1,6 @@
 import pytest
 from datetime import datetime, timedelta
-from library_service import calculate_late_fee_for_book, add_book_to_catalog, borrow_book_by_patron
+from services.library_service import calculate_late_fee_for_book, add_book_to_catalog, borrow_book_by_patron
 from database import init_database, get_db_connection, get_book_by_isbn
 
 @pytest.fixture(autouse=True)
@@ -117,7 +117,7 @@ def test_calculate_late_fee_returned_book():
     book = get_book_by_isbn("1234567890123")
     borrow_book_by_patron("123456", book['id'])
     # Return the book
-    from library_service import return_book_by_patron
+    from services.library_service import return_book_by_patron
     return_book_by_patron("123456", book['id'])
     result = calculate_late_fee_for_book("123456", book['id'])
     assert result['fee_amount'] == 0.00

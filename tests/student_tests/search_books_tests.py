@@ -1,5 +1,5 @@
 import pytest
-from library_service import (
+from services.library_service import (
     search_books_in_catalog, add_book_to_catalog
 )
 from database import init_database, get_db_connection

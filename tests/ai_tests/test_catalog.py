@@ -1,6 +1,6 @@
 import pytest
 from database import get_all_books, init_database, get_db_connection
-from library_service import add_book_to_catalog
+from services.library_service import add_book_to_catalog
 
 @pytest.fixture(autouse=True)
 def setup_database():
@@ -42,7 +42,7 @@ def test_get_all_books_multiple():
 def test_get_all_books_with_borrowed():
     """Test getting all books when some are borrowed."""
     add_book_to_catalog("Test Book", "Test Author", "1234567890123", 2)
-    from library_service import borrow_book_by_patron
+    from services.library_service import borrow_book_by_patron
     book = get_all_books()[0]
     borrow_book_by_patron("123456", book['id'])
     books = get_all_books()
