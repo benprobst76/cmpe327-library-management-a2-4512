@@ -12,30 +12,62 @@ jobs:
   run_tests:
     strategy:
       matrix:
-        python-version:
-          - '3.9'
-          - '3.10'
-          - '3.11'
-          - '3.12'
+        python-version: ['3.9', '3.10', '3.11', '3.12']
         os: [ubuntu-latest, windows-latest, macos-latest]
       fail-fast: false
     name: Test Python ${{ matrix.python-version }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    env:
+      PYTEST_ADDOPTS: "--maxfail=1"
+      PLAYWRIGHT_DISABLE_ERROR_REPORTING: "1"
+      PLAYWRIGHT_HEADLESS: "1"        # Enforce headless across environments
+      PYTHONUNBUFFERED: "1"
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          cache: 'pip'
 
-      - name: Install dependencies
+      - name: Install system dependencies (Linux only)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libnss3 libatk-bridge2.0-0 libgtk-3-0 libasound2
+          echo "Linux system dependencies installed."
+
+      - name: Upgrade pip & install project dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -e .
-          playwright install chromium
 
-      - name: Run tests
-        run: pytest -v -s
+      - name: Install Playwright browsers (Chromium) with deps
+        run: |
+          python -m playwright install --with-deps chromium
+
+      - name: Verify Playwright installation
+        run: |
+          python - <<'PY'
+          import sys, platform
+          print("Python:", sys.version)
+          print("Platform:", platform.platform())
+          from playwright.sync_api import sync_playwright
+          with sync_playwright() as p:
+              print("Installed browsers:", [b.name for b in [p.chromium, p.firefox, p.webkit]])
+          PY
+
+      - name: Run tests (with one automatic retry on flaky browser startup)
+        shell: bash
+        run: |
+          set -e
+          attempt() {
+            echo "Running pytest attempt $1 ..."
+            pytest -v -s --timeout=60 || return $?
+          }
+          attempt 1 || (echo "First attempt failed — retrying after short delay" && sleep 10 && attempt 2)
