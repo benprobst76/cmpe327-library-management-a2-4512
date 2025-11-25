@@ -18,31 +18,6 @@ def is_port_in_use(port):
         return sock.connect_ex(('127.0.0.1', port)) == 0
 
 
-def wait_for_server(url, timeout=30, check_interval=0.5):
-    """
-    Wait for the server to become available by polling the URL.
-    
-    Args:
-        url: The URL to check
-        timeout: Maximum time to wait in seconds
-        check_interval: Time between checks in seconds
-    
-    Returns:
-        bool: True if server is available, False if timeout
-    """
-    start_time = time.time()
-    while time.time() - start_time < timeout:
-        try:
-            response = requests.get(url, timeout=1)
-            if response.status_code < 500:  # Server is responding
-                print(f"Server is ready at {url}")
-                return True
-        except (requests.ConnectionError, requests.Timeout):
-            pass
-        time.sleep(check_interval)
-    return False
-
-
 @pytest.fixture(scope="module", autouse=True)
 def flask_server():
     """
@@ -52,8 +27,8 @@ def flask_server():
     global flask_process
     
     # Check if port is already in use
-    if is_port_in_use(5001):
-        print("\nPort 5001 is already in use. Using existing server.")
+    if is_port_in_use(5000):
+        print("\nPort 5000 is already in use. Using existing server.")
         yield
         return
 
@@ -68,16 +43,8 @@ def flask_server():
         env={**os.environ, "FLASK_ENV": "testing"}
     )
     
-    # Wait for the server to be ready (with proper health check)
-    if not wait_for_server("http://127.0.0.1:5001", timeout=30):
-        # If server didn't start, print error output
-        if flask_process.poll() is not None:
-            stdout, stderr = flask_process.communicate()
-            print(f"Flask server failed to start!")
-            print(f"STDOUT: {stdout}")
-            print(f"STDERR: {stderr}")
-            raise RuntimeError("Flask server failed to start within 30 seconds")
-    
+    # Wait for the server to be ready
+    time.sleep(30) 
     yield
     
     # Stop the Flask server after tests complete
@@ -93,7 +60,7 @@ def flask_server():
 
 def test_homepage_title(page: Page) -> None:
     """Test that the homepage loads with the correct title."""
-    page.goto("http://127.0.0.1:5001")
+    page.goto("http://127.0.0.1:5000")
     expect(page).to_have_title("Library Management System")
 
 
@@ -111,7 +78,7 @@ def test_borrow_book_user_flow(page: Page) -> None:
     7. Verify book availability count decreases
     """
     # Step 1: Navigate to the catalog page
-    page.goto("http://127.0.0.1:5001/catalog")
+    page.goto("http://127.0.0.1:5000/catalog")
     
     # Step 2: Verify the catalog page loaded with correct heading
     expect(page.locator("h2")).to_contain_text("Book Catalog")
@@ -132,12 +99,12 @@ def test_borrow_book_user_flow(page: Page) -> None:
     
     # Get the book title for verification
     book_title = first_available_book_row.locator("td").nth(1).inner_text()
-    print(f"\n📚 Attempting to borrow: {book_title}")
+    print(f"\nAttempting to borrow: {book_title}")
     
     # Get the initial availability text
     initial_availability = first_available_book_row.locator(".status-available").inner_text()
-    print(f"📊 Initial availability: {initial_availability}")
-    
+    print(f"Initial availability: {initial_availability}")
+
     # Step 5: Fill in the patron ID in the borrow form
     patron_id_input = first_available_book_row.locator("input[name='patron_id']")
     expect(patron_id_input).to_be_visible()
@@ -174,7 +141,7 @@ def test_borrow_book_invalid_patron_id(page: Page) -> None:
     3. Try to submit with empty or invalid patron ID
     4. Verify HTML5 validation prevents submission
     """
-    page.goto("http://127.0.0.1:5001/catalog")
+    page.goto("http://127.0.0.1:5000/catalog")
     
     # Find the first available book
     first_available_book_row = page.locator("tr:has(.status-available)").first
@@ -196,7 +163,7 @@ def test_borrow_book_invalid_patron_id(page: Page) -> None:
     borrow_button.click()
     
     # Verify we're still on the same page
-    expect(page).to_have_url("http://127.0.0.1:5001/catalog")
+    expect(page).to_have_url("http://127.0.0.1:5000/catalog")
     
     print("HTML5 validation correctly prevents invalid patron ID submission")
 
@@ -211,7 +178,7 @@ def test_navigate_to_catalog_from_home(page: Page) -> None:
     3. Verify catalog page loads
     """
     # Start at homepage
-    page.goto("http://127.0.0.1:5001")
+    page.goto("http://127.0.0.1:5000")
     
     # Look for a link to the catalog
     catalog_link = page.locator("a[href*='catalog'], a:has-text('Catalog'), a:has-text('Browse')")
@@ -220,7 +187,7 @@ def test_navigate_to_catalog_from_home(page: Page) -> None:
         catalog_link.first.click()
         
         # Verify we're on the catalog page
-        expect(page).to_have_url("http://127.0.0.1:5001/catalog")
+        expect(page).to_have_url("http://127.0.0.1:5000/catalog")
         expect(page.locator("h2")).to_contain_text("Book Catalog")
         
         print("Successfully navigated from home to catalog")
@@ -237,7 +204,7 @@ def test_catalog_displays_book_information(page: Page) -> None:
     2. Verify all expected columns are present
     3. Verify at least one book is displayed with complete information
     """
-    page.goto("http://127.0.0.1:5001/catalog")
+    page.goto("http://127.0.0.1:5000/catalog")
     
     # Verify all table headers are present
     headers = ["ID", "Title", "Author", "ISBN", "Availability", "Actions"]
